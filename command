@@ -1,0 +1,1 @@
+rm -rf app/components/footer.tsx 
