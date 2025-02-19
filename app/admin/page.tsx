@@ -2,8 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useUser, UserButton } from "@clerk/nextjs";
-import { redirect } from 'next/navigation'
 
 // Sidebar item type
 type SidebarItem = {
@@ -13,13 +11,7 @@ type SidebarItem = {
 }
 
 export default function AdminDashboard() {
-  const { user, isLoaded } = useUser();
   const [activePage, setActivePage] = useState('services')
-
-  // Check if user is loaded and redirect if not admin
-  if (isLoaded && !user) {
-    redirect('/')
-  }
 
   const sidebarItems: SidebarItem[] = [
     { name: 'Services', path: '/admin/services' },
@@ -34,11 +26,7 @@ export default function AdminDashboard() {
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Admin Dashboard</h2>
-            <UserButton afterSignOutUrl="/" />
           </div>
-          <p className="text-sm text-gray-600 mt-2">
-            {user?.emailAddresses[0].emailAddress}
-          </p>
         </div>
         <nav className="mt-4">
           {sidebarItems.map((item) => (
