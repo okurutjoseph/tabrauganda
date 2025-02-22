@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Cookies from 'js-cookie'
 
 // Sidebar item type
 type SidebarItem = {
@@ -13,13 +14,16 @@ type SidebarItem = {
 
 export default function AdminDashboard() {
   const [activePage, setActivePage] = useState('services')
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
     // Check if user is authenticated
-    const isAuthenticated = localStorage.getItem('adminAuthenticated')
+    const isAuthenticated = Cookies.get('adminAuthenticated')
     if (!isAuthenticated) {
-      router.push('/admin/login')
+      router.replace('/admin/login')
+    } else {
+      setIsLoading(false)
     }
   }, [router])
 
@@ -30,8 +34,16 @@ export default function AdminDashboard() {
   ]
 
   const handleLogout = () => {
-    localStorage.removeItem('adminAuthenticated')
-    router.push('/admin/login')
+    Cookies.remove('adminAuthenticated')
+    router.replace('/admin/login')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-xl text-gray-600">Loading...</div>
+      </div>
+    )
   }
 
   return (

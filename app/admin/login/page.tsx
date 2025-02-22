@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Cookies from 'js-cookie'
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('')
@@ -15,9 +16,9 @@ export default function AdminLogin() {
     try {
       // Check against the specified credentials
       if (username === 'tabrauganda' && password === 'qwerty#256') {
-        // Set authentication token/session
-        localStorage.setItem('adminAuthenticated', 'true')
-        router.push('/admin')
+        // Set authentication cookie (expires in 24 hours)
+        Cookies.set('adminAuthenticated', 'true', { expires: 1 })
+        router.replace('/admin')
       } else {
         setError('Invalid credentials')
       }
