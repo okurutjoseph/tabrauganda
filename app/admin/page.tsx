@@ -64,13 +64,20 @@ export default function AdminDashboard() {
   const [supportCategory, setSupportCategory] = useState<'mother' | 'child'>('mother')
 
   useEffect(() => {
-    // Check if user is authenticated
+    // Check if user is authenticated and Convex URL is available
     const isAuthenticated = Cookies.get('adminAuthenticated')
     if (!isAuthenticated) {
       router.replace('/admin/login')
-    } else {
-      setIsLoading(false)
+      return
     }
+    
+    if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
+      console.error('Convex URL not found')
+      toast.error('Configuration error. Please try again later.')
+      return
+    }
+
+    setIsLoading(false)
   }, [router])
 
   const sidebarItems: SidebarItem[] = [
