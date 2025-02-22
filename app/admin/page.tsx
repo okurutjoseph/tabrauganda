@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 // Sidebar item type
 type SidebarItem = {
@@ -12,12 +13,26 @@ type SidebarItem = {
 
 export default function AdminDashboard() {
   const [activePage, setActivePage] = useState('services')
+  const router = useRouter()
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const isAuthenticated = localStorage.getItem('adminAuthenticated')
+    if (!isAuthenticated) {
+      router.push('/admin/login')
+    }
+  }, [router])
 
   const sidebarItems: SidebarItem[] = [
     { name: 'Services', path: '/admin/services' },
     { name: 'Impact', path: '/admin/impact' },
     { name: 'Support', path: '/admin/support' }
   ]
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminAuthenticated')
+    router.push('/admin/login')
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -41,6 +56,12 @@ export default function AdminDashboard() {
               <span>{item.name}</span>
             </Link>
           ))}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center px-6 py-3 text-red-600 hover:bg-gray-100 transition-colors"
+          >
+            Logout
+          </button>
         </nav>
       </div>
 
