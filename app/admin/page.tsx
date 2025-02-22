@@ -64,19 +64,14 @@ export default function AdminDashboard() {
   const [supportCategory, setSupportCategory] = useState<'mother' | 'child'>('mother')
 
   useEffect(() => {
-    // Check if user is authenticated and Convex URL is available
+    // Check if user is authenticated
     const isAuthenticated = Cookies.get('adminAuthenticated')
     if (!isAuthenticated) {
       router.replace('/admin/login')
       return
     }
     
-    if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
-      console.error('Convex URL not found')
-      toast.error('Configuration error. Please try again later.')
-      return
-    }
-
+    // Remove the Convex URL check since it's now handled in providers.tsx
     setIsLoading(false)
   }, [router])
 
@@ -153,8 +148,6 @@ export default function AdminDashboard() {
       toast.error('Please fill in all required fields')
       return
     }
-    
-    setIsLoading(true)
 
     try {
       let imageUrl = undefined
@@ -168,7 +161,6 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading image:', error)
           toast.error('Failed to upload image')
-          setIsLoading(false)
           return
         }
       }
@@ -179,23 +171,24 @@ export default function AdminDashboard() {
         imageUrl,
       })
 
-      // Show success message and reset form
+      // Show success message first
       toast.success('Service created successfully!')
+
+      // Reset form
       setProjectName('')
       setServiceDescription('')
       setServiceImage(null)
       setServiceImagePreview('')
 
-      // Wait for 1 second before refreshing
+      // Show loading state and refresh after notification
       setTimeout(() => {
+        setIsLoading(true)
         router.refresh()
       }, 1000)
 
     } catch (error) {
       console.error('Error creating service:', error)
       toast.error('Failed to create service. Please try again.')
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -209,8 +202,6 @@ export default function AdminDashboard() {
       toast.error('Please provide a video URL')
       return
     }
-    
-    setIsLoading(true)
 
     try {
       let mediaUrl = undefined
@@ -224,7 +215,6 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading image:', error)
           toast.error('Failed to upload image')
-          setIsLoading(false)
           return
         }
       } else if (mediaType === 'video') {
@@ -238,24 +228,25 @@ export default function AdminDashboard() {
         mediaUrl,
       })
 
-      // Show success message and reset form
+      // Show success message first
       toast.success('Impact story created successfully!')
+
+      // Reset form
       setImpactHeading('')
       setImpactDescription('')
       setImpactImage(null)
       setImpactImagePreview('')
       setVideoUrl('')
 
-      // Wait for 1 second before refreshing
+      // Show loading state and refresh after notification
       setTimeout(() => {
+        setIsLoading(true)
         router.refresh()
       }, 1000)
 
     } catch (error) {
       console.error('Error creating impact story:', error)
       toast.error('Failed to create impact story. Please try again.')
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -273,8 +264,6 @@ export default function AdminDashboard() {
       toast.error('Please provide a resource URL')
       return
     }
-    
-    setIsLoading(true)
 
     try {
       let thumbnailUrl = undefined
@@ -290,7 +279,6 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading thumbnail:', error)
           toast.error('Failed to upload thumbnail')
-          setIsLoading(false)
           return
         }
       }
@@ -304,7 +292,6 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading document:', error)
           toast.error('Failed to upload document')
-          setIsLoading(false)
           return
         }
       } else if (resourceType === 'link') {
@@ -320,8 +307,10 @@ export default function AdminDashboard() {
         thumbnailUrl,
       })
 
-      // Show success message and reset form
+      // Show success message first
       toast.success('Resource created successfully!')
+
+      // Reset form
       setResourceName('')
       setResourceDescription('')
       setDocumentFile(null)
@@ -329,16 +318,15 @@ export default function AdminDashboard() {
       setThumbnailFile(null)
       setThumbnailPreview('')
 
-      // Wait for 1 second before refreshing
+      // Show loading state and refresh after notification
       setTimeout(() => {
+        setIsLoading(true)
         router.refresh()
       }, 1000)
 
     } catch (error) {
       console.error('Error creating resource:', error)
       toast.error('Failed to create resource. Please try again.')
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -353,8 +341,6 @@ export default function AdminDashboard() {
       toast.error('Please enter a valid age')
       return
     }
-    
-    setIsLoading(true)
 
     try {
       let imageUrl = undefined
@@ -368,7 +354,6 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading image:', error)
           toast.error('Failed to upload image')
-          setIsLoading(false)
           return
         }
       }
@@ -382,8 +367,10 @@ export default function AdminDashboard() {
         imageUrl,
       })
 
-      // Show success message and reset form
+      // Show success message first
       toast.success('Support case created successfully!')
+
+      // Reset form
       setSupportName('')
       setSupportAge('')
       setSupportLocation('')
@@ -391,23 +378,25 @@ export default function AdminDashboard() {
       setSupportImage(null)
       setSupportImagePreview('')
 
-      // Wait for 1 second before refreshing
+      // Show loading state and refresh after notification
       setTimeout(() => {
+        setIsLoading(true)
         router.refresh()
       }, 1000)
 
     } catch (error) {
       console.error('Error creating support case:', error)
       toast.error('Failed to create support case. Please try again.')
-    } finally {
-      setIsLoading(false)
     }
   }
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-xl text-gray-600">Loading...</div>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="text-xl text-gray-600">Initializing dashboard...</div>
+        </div>
       </div>
     )
   }
