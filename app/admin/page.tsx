@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Editor } from '@tinymce/tinymce-react'
 import Image from 'next/image'
 import Cookies from 'js-cookie'
 
@@ -41,6 +40,15 @@ export default function AdminDashboard() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('')
 
+  // Support state
+  const [supportName, setSupportName] = useState('')
+  const [supportAge, setSupportAge] = useState('')
+  const [supportLocation, setSupportLocation] = useState('')
+  const [supportStory, setSupportStory] = useState('')
+  const [supportImage, setSupportImage] = useState<File | null>(null)
+  const [supportImagePreview, setSupportImagePreview] = useState<string>('')
+  const [supportCategory, setSupportCategory] = useState<'mother' | 'child'>('mother')
+
   useEffect(() => {
     // Check if user is authenticated
     const isAuthenticated = Cookies.get('adminAuthenticated')
@@ -54,7 +62,8 @@ export default function AdminDashboard() {
   const sidebarItems: SidebarItem[] = [
     { name: 'Services', path: '#services' },
     { name: 'Impact', path: '#impact' },
-    { name: 'Resources', path: '#resources' }
+    { name: 'Resources', path: '#resources' },
+    { name: 'Support', path: '#support' }
   ]
 
   const handleLogout = () => {
@@ -105,6 +114,18 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleSupportImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSupportImage(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setSupportImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleServiceSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // TODO: Implement form submission
@@ -127,6 +148,19 @@ export default function AdminDashboard() {
       documentFile,
       resourceUrl,
       thumbnailFile
+    })
+  }
+
+  const handleSupportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    // TODO: Implement form submission
+    console.log({
+      category: supportCategory,
+      name: supportName,
+      age: supportAge,
+      location: supportLocation,
+      story: supportStory,
+      image: supportImage
     })
   }
 
@@ -195,23 +229,13 @@ export default function AdminDashboard() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Description
                 </label>
-                <Editor
-                  apiKey="your-tinymce-api-key"
+                <textarea
                   value={serviceDescription}
-                  onEditorChange={(content) => setServiceDescription(content)}
-                  init={{
-                    height: 400,
-                    menubar: false,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | blocks | ' +
-                      'bold italic forecolor | alignleft aligncenter ' +
-                      'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
-                  }}
+                  onChange={(e) => setServiceDescription(e.target.value)}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  placeholder="Enter service description..."
                 />
               </div>
 
@@ -325,23 +349,13 @@ export default function AdminDashboard() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Description
                 </label>
-                <Editor
-                  apiKey="your-tinymce-api-key"
+                <textarea
                   value={impactDescription}
-                  onEditorChange={(content) => setImpactDescription(content)}
-                  init={{
-                    height: 400,
-                    menubar: false,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | blocks | ' +
-                      'bold italic forecolor | alignleft aligncenter ' +
-                      'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
-                  }}
+                  onChange={(e) => setImpactDescription(e.target.value)}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  placeholder="Enter impact description..."
                 />
               </div>
 
@@ -474,23 +488,13 @@ export default function AdminDashboard() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Description
                 </label>
-                <Editor
-                  apiKey="your-tinymce-api-key"
+                <textarea
                   value={resourceDescription}
-                  onEditorChange={(content) => setResourceDescription(content)}
-                  init={{
-                    height: 300,
-                    menubar: false,
-                    plugins: [
-                      'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
-                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                      'insertdatetime', 'table', 'code', 'help', 'wordcount'
-                    ],
-                    toolbar: 'undo redo | blocks | ' +
-                      'bold italic forecolor | alignleft aligncenter ' +
-                      'alignright alignjustify | bullist numlist outdent indent | ' +
-                      'removeformat | help',
-                  }}
+                  onChange={(e) => setResourceDescription(e.target.value)}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  placeholder="Enter resource description..."
                 />
               </div>
 
@@ -505,6 +509,145 @@ export default function AdminDashboard() {
             </form>
           </div>
         )
+
+      case 'support':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold">Add Support Case</h2>
+            <form onSubmit={handleSupportSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <div className="flex space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      value="mother"
+                      checked={supportCategory === 'mother'}
+                      onChange={(e) => setSupportCategory(e.target.value as 'mother' | 'child')}
+                      className="form-radio h-4 w-4 text-blue-600"
+                    />
+                    <span className="ml-2">Mother</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      value="child"
+                      checked={supportCategory === 'child'}
+                      onChange={(e) => setSupportCategory(e.target.value as 'mother' | 'child')}
+                      className="form-radio h-4 w-4 text-blue-600"
+                    />
+                    <span className="ml-2">Child</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Person Image
+                </label>
+                <div className="flex items-center space-x-4">
+                  <div className="relative w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
+                    {supportImagePreview ? (
+                      <Image
+                        src={supportImagePreview}
+                        alt="Person preview"
+                        fill
+                        style={{ objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-gray-500 text-sm">No image</span>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleSupportImageChange}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-full file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-blue-50 file:text-blue-700
+                      hover:file:bg-blue-100"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={supportName}
+                  onChange={(e) => setSupportName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  placeholder="Enter person's name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Age
+                </label>
+                <input
+                  type="number"
+                  value={supportAge}
+                  onChange={(e) => setSupportAge(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  min="0"
+                  max="150"
+                  placeholder="Enter person's age"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={supportLocation}
+                  onChange={(e) => setSupportLocation(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  placeholder="Enter person's location"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Story
+                </label>
+                <textarea
+                  value={supportStory}
+                  onChange={(e) => setSupportStory(e.target.value)}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  placeholder="Enter person's story..."
+                />
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Save Support Case
+                </button>
+              </div>
+            </form>
+          </div>
+        )
+
+      default:
+        return null
     }
   }
 
