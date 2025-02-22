@@ -34,6 +34,7 @@ export default function ServicesAdmin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!projectName.trim() || !description.trim()) {
+      toast.error('Please fill in all required fields')
       return
     }
     
@@ -42,35 +43,50 @@ export default function ServicesAdmin() {
     try {
       let imageUrl = undefined
 
+      // Upload image if exists
       if (imageFile) {
-        const uploadResult = await startUpload([imageFile])
-        if (uploadResult && uploadResult[0]) {
-          imageUrl = uploadResult[0].url
+        try {
+          const uploadResult = await startUpload([imageFile])
+          if (uploadResult && uploadResult[0]) {
+            imageUrl = uploadResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error)
+          toast.error('Failed to upload image')
+          setIsUploading(false)
+          return
         }
       }
 
-      await createService({
-        projectName: projectName.trim(),
-        description: description.trim(),
-        imageUrl,
-      })
+      // Save to Convex
+      try {
+        await createService({
+          projectName: projectName.trim(),
+          description: description.trim(),
+          imageUrl,
+        })
 
-      // Show success message
-      toast.success('Service created successfully!')
+        // Show success message
+        toast.success('Service created successfully!')
 
-      // Reset form
-      setProjectName('')
-      setDescription('')
-      setImageFile(null)
-      setImagePreview('')
-      setIsUploading(false)
+        // Reset form
+        setProjectName('')
+        setDescription('')
+        setImageFile(null)
+        setImagePreview('')
 
-      // Refresh the page
-      router.refresh()
+        // Refresh the page to show new data
+        router.refresh()
+
+      } catch (error) {
+        console.error('Error saving to Convex:', error)
+        toast.error('Failed to save service data')
+      }
 
     } catch (error) {
       console.error('Error creating service:', error)
       toast.error('Failed to create service. Please try again.')
+    } finally {
       setIsUploading(false)
     }
   }

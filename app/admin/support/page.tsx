@@ -43,47 +43,65 @@ export default function SupportAdmin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isFormValid()) return
+    if (!isFormValid()) {
+      toast.error('Please fill in all required fields correctly')
+      return
+    }
     
     setIsUploading(true)
 
     try {
       let imageUrl = undefined
 
+      // Upload image if exists
       if (imageFile) {
-        const uploadResult = await startUpload([imageFile])
-        if (uploadResult && uploadResult[0]) {
-          imageUrl = uploadResult[0].url
+        try {
+          const uploadResult = await startUpload([imageFile])
+          if (uploadResult && uploadResult[0]) {
+            imageUrl = uploadResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error)
+          toast.error('Failed to upload image')
+          setIsUploading(false)
+          return
         }
       }
 
-      await createSupport({
-        category,
-        name: name.trim(),
-        age: parseInt(age),
-        location: location.trim(),
-        story: story.trim(),
-        imageUrl,
-      })
+      // Save to Convex
+      try {
+        await createSupport({
+          category,
+          name: name.trim(),
+          age: parseInt(age),
+          location: location.trim(),
+          story: story.trim(),
+          imageUrl,
+        })
 
-      // Show success message
-      toast.success('Support case created successfully!')
+        // Show success message
+        toast.success('Support case created successfully!')
 
-      // Reset form
-      setName('')
-      setAge('')
-      setLocation('')
-      setStory('')
-      setImageFile(null)
-      setImagePreview('')
-      setIsUploading(false)
+        // Reset form
+        setName('')
+        setAge('')
+        setLocation('')
+        setStory('')
+        setImageFile(null)
+        setImagePreview('')
 
-      // Refresh the page
-      router.refresh()
+        // Refresh the page to show new data
+        router.refresh()
+
+      } catch (error) {
+        console.error('Error saving to Convex:', error)
+        toast.error('Failed to save support case data')
+      }
 
     } catch (error) {
       console.error('Error creating support case:', error)
       toast.error('Failed to create support case. Please try again.')
+    } finally {
       setIsUploading(false)
     }
   }
@@ -216,7 +234,7 @@ export default function SupportAdmin() {
           <button
             type="submit"
             disabled={isUploading || !isFormValid()}
-            className={`bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors ${
+            className={`w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors ${
               (isUploading || !isFormValid()) ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >

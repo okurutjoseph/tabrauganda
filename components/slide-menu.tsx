@@ -65,7 +65,7 @@ export default function SlideMenu({ isOpen, onClose }: SlideMenuProps) {
               <Link href="/what-we-do" className="text-xl hover:opacity-80 flex justify-between items-center">
                 WHAT WE DO</Link></li>
             <li><Link href="/" className="text-xl hover:opacity-80">WHO WE ARE</Link></li>
-            <li><Link href="/" className="text-xl hover:opacity-80">STORIES OF IMPACT</Link></li>
+            <li><Link href="/stories-of-impact" className="text-xl hover:opacity-80">STORIES OF IMPACT</Link></li>
             <li>
               <Link href="/" className="text-xl hover:opacity-80 flex justify-between items-center">
                 GET INVOLVED</Link></li>
@@ -73,7 +73,7 @@ export default function SlideMenu({ isOpen, onClose }: SlideMenuProps) {
               <Link href="/donate" className="text-xl hover:opacity-80 flex justify-between items-center">
                 DONATE</Link></li>
                 <li>
-              <Link href="/" className="text-xl hover:opacity-80 flex justify-between items-center">
+              <Link href="/sponsor" className="text-xl hover:opacity-80 flex justify-between items-center">
                 SPONSOR</Link></li>
             <li><Link href="/contact" className="text-xl hover:opacity-80">CONTACT US</Link></li>
             <li><Link href="/" className="text-xl hover:opacity-80">STAY CONNECTED</Link></li>

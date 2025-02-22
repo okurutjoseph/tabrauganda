@@ -95,7 +95,7 @@ export default function ResourcesAdmin() {
         finalResourceUrl = resourceUrl.trim()
       }
 
-      // Create resource in Convex
+      // Save to Convex
       try {
         await createResource({
           name: resourceName.trim(),
@@ -116,20 +116,19 @@ export default function ResourcesAdmin() {
         setResourceUrl('')
         setThumbnailFile(null)
         setThumbnailPreview('')
-        setIsUploading(false)
 
-        // Refresh the page
+        // Refresh the page to show new data
         router.refresh()
 
       } catch (error) {
         console.error('Error saving to Convex:', error)
         toast.error('Failed to save resource data')
-        setIsUploading(false)
       }
 
     } catch (error) {
       console.error('Error creating resource:', error)
       toast.error('Failed to create resource. Please try again.')
+    } finally {
       setIsUploading(false)
     }
   }

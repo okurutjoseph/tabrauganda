@@ -36,9 +36,11 @@ export default function ImpactAdmin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!heading.trim() || !description.trim()) {
+      toast.error('Please fill in all required fields')
       return
     }
     if (mediaType === 'video' && !videoUrl.trim()) {
+      toast.error('Please provide a video URL')
       return
     }
     
@@ -48,38 +50,52 @@ export default function ImpactAdmin() {
       let mediaUrl = undefined
 
       if (mediaType === 'image' && imageFile) {
-        const uploadResult = await startUpload([imageFile])
-        if (uploadResult && uploadResult[0]) {
-          mediaUrl = uploadResult[0].url
+        try {
+          const uploadResult = await startUpload([imageFile])
+          if (uploadResult && uploadResult[0]) {
+            mediaUrl = uploadResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error)
+          toast.error('Failed to upload image')
+          setIsUploading(false)
+          return
         }
       } else if (mediaType === 'video') {
         mediaUrl = videoUrl.trim()
       }
 
-      await createImpact({
-        heading: heading.trim(),
-        description: description.trim(),
-        mediaType,
-        mediaUrl,
-      })
+      // Save to Convex
+      try {
+        await createImpact({
+          heading: heading.trim(),
+          description: description.trim(),
+          mediaType,
+          mediaUrl,
+        })
 
-      // Show success message
-      toast.success('Impact story created successfully!')
+        // Show success message
+        toast.success('Impact story created successfully!')
 
-      // Reset form
-      setHeading('')
-      setDescription('')
-      setImageFile(null)
-      setImagePreview('')
-      setVideoUrl('')
-      setIsUploading(false)
+        // Reset form
+        setHeading('')
+        setDescription('')
+        setImageFile(null)
+        setImagePreview('')
+        setVideoUrl('')
 
-      // Refresh the page
-      router.refresh()
+        // Refresh the page to show new data
+        router.refresh()
+
+      } catch (error) {
+        console.error('Error saving to Convex:', error)
+        toast.error('Failed to save impact story data')
+      }
 
     } catch (error) {
       console.error('Error creating impact story:', error)
       toast.error('Failed to create impact story. Please try again.')
+    } finally {
       setIsUploading(false)
     }
   }
