@@ -1,17 +1,15 @@
-import Link from 'next/link'
-
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
-        <p className="mb-8 text-gray-600">Sorry, we couldn&apos;t find the page you&apos;re looking for.</p>
-        <Link
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
+        <p className="text-xl text-gray-600 mb-8">Page not found</p>
+        <a
           href="/"
-          className="bg-[#008c15] text-white px-6 py-3 rounded hover:bg-[#007012] transition-colors"
+          className="text-blue-600 hover:text-blue-800 transition-colors"
         >
           Go back home
-        </Link>
+        </a>
       </div>
     </div>
   )
