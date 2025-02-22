@@ -2,12 +2,22 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useUploadThing } from '@/lib/uploadthing'
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { Toaster, toast } from 'sonner' // Import Toaster component
 
 export default function ServicesAdmin() {
-  const [projectName, setProjectName] = useState('')
-  const [description, setDescription] = useState('')
+  const router = useRouter()
+  const [projectName, setProjectName] = useState<string>('')
+  const [description, setDescription] = useState<string>('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
+  const [isUploading, setIsUploading] = useState<boolean>(false)
+
+  const { startUpload } = useUploadThing("imageUploader")
+  const createService = useMutation(api.services.create)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -23,12 +33,51 @@ export default function ServicesAdmin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement form submission
-    console.log({ projectName, description, imageFile })
+    if (!projectName.trim() || !description.trim()) {
+      return
+    }
+    
+    setIsUploading(true)
+
+    try {
+      let imageUrl = undefined
+
+      if (imageFile) {
+        const uploadResult = await startUpload([imageFile])
+        if (uploadResult && uploadResult[0]) {
+          imageUrl = uploadResult[0].url
+        }
+      }
+
+      await createService({
+        projectName: projectName.trim(),
+        description: description.trim(),
+        imageUrl,
+      })
+
+      // Show success message
+      toast.success('Service created successfully!')
+
+      // Reset form
+      setProjectName('')
+      setDescription('')
+      setImageFile(null)
+      setImagePreview('')
+      setIsUploading(false)
+
+      // Refresh the page
+      router.refresh()
+
+    } catch (error) {
+      console.error('Error creating service:', error)
+      toast.error('Failed to create service. Please try again.')
+      setIsUploading(false)
+    }
   }
 
   return (
     <div className="p-6">
+      <Toaster /> {/* Add Toaster component */}
       <h2 className="text-2xl font-semibold mb-6">Add New Service</h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -75,6 +124,7 @@ export default function ServicesAdmin() {
             onChange={(e) => setProjectName(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+            placeholder="Enter project name"
           />
         </div>
 
@@ -95,9 +145,12 @@ export default function ServicesAdmin() {
         <div>
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+            disabled={isUploading || !projectName.trim() || !description.trim()}
+            className={`bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors ${
+              (isUploading || !projectName.trim() || !description.trim()) ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Save Service
+            {isUploading ? 'Saving...' : 'Save Service'}
           </button>
         </div>
       </form>

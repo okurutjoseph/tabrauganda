@@ -2,15 +2,26 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useUploadThing } from '@/lib/uploadthing'
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { toast } from 'sonner'
 
 export default function ResourcesAdmin() {
-  const [resourceName, setResourceName] = useState('')
-  const [description, setDescription] = useState('')
+  const router = useRouter()
+  const [resourceName, setResourceName] = useState<string>('')
+  const [description, setDescription] = useState<string>('')
   const [resourceType, setResourceType] = useState<'document' | 'link'>('document')
   const [documentFile, setDocumentFile] = useState<File | null>(null)
-  const [resourceUrl, setResourceUrl] = useState('')
+  const [resourceUrl, setResourceUrl] = useState<string>('')
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('')
+  const [isUploading, setIsUploading] = useState<boolean>(false)
+
+  const { startUpload: startImageUpload } = useUploadThing("imageUploader")
+  const { startUpload: startDocumentUpload } = useUploadThing("documentUploader")
+  const createResource = useMutation(api.resources.create)
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -31,17 +42,96 @@ export default function ResourcesAdmin() {
     }
   }
 
+  const isFormValid = () => {
+    if (!resourceName.trim() || !description.trim()) return false
+    if (resourceType === 'document' && !documentFile) return false
+    if (resourceType === 'link' && !resourceUrl.trim()) return false
+    return true
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement form submission
-    console.log({
-      resourceName,
-      description,
-      resourceType,
-      documentFile,
-      resourceUrl,
-      thumbnailFile
-    })
+    if (!isFormValid()) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+    
+    setIsUploading(true)
+
+    try {
+      let thumbnailUrl = undefined
+      let documentUrl = undefined
+      let finalResourceUrl = undefined
+
+      // Upload thumbnail if exists
+      if (thumbnailFile) {
+        try {
+          const thumbnailResult = await startImageUpload([thumbnailFile])
+          if (thumbnailResult && thumbnailResult[0]) {
+            thumbnailUrl = thumbnailResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading thumbnail:', error)
+          toast.error('Failed to upload thumbnail')
+          setIsUploading(false)
+          return
+        }
+      }
+
+      // Upload document if it's a document type resource
+      if (resourceType === 'document' && documentFile) {
+        try {
+          const documentResult = await startDocumentUpload([documentFile])
+          if (documentResult && documentResult[0]) {
+            documentUrl = documentResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading document:', error)
+          toast.error('Failed to upload document')
+          setIsUploading(false)
+          return
+        }
+      } else if (resourceType === 'link') {
+        finalResourceUrl = resourceUrl.trim()
+      }
+
+      // Create resource in Convex
+      try {
+        await createResource({
+          name: resourceName.trim(),
+          description: description.trim(),
+          resourceType,
+          resourceUrl: finalResourceUrl,
+          documentUrl,
+          thumbnailUrl,
+        })
+
+        // Show success message
+        toast.success('Resource created successfully!')
+
+        // Reset form
+        setResourceName('')
+        setDescription('')
+        setDocumentFile(null)
+        setResourceUrl('')
+        setThumbnailFile(null)
+        setThumbnailPreview('')
+        setIsUploading(false)
+
+        // Refresh the page
+        router.refresh()
+
+      } catch (error) {
+        console.error('Error saving to Convex:', error)
+        toast.error('Failed to save resource data')
+        setIsUploading(false)
+      }
+
+    } catch (error) {
+      console.error('Error creating resource:', error)
+      toast.error('Failed to create resource. Please try again.')
+      setIsUploading(false)
+    }
   }
 
   return (
@@ -87,6 +177,7 @@ export default function ResourcesAdmin() {
             onChange={(e) => setResourceName(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+            placeholder="Enter resource name"
           />
         </div>
 
@@ -138,7 +229,7 @@ export default function ResourcesAdmin() {
                 file:text-sm file:font-semibold
                 file:bg-blue-50 file:text-blue-700
                 hover:file:bg-blue-100"
-              required
+              required={resourceType === 'document'}
             />
           </div>
         ) : (
@@ -152,7 +243,7 @@ export default function ResourcesAdmin() {
               onChange={(e) => setResourceUrl(e.target.value)}
               placeholder="Enter resource URL"
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              required={resourceType === 'link'}
             />
           </div>
         )}
@@ -174,9 +265,12 @@ export default function ResourcesAdmin() {
         <div>
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+            disabled={isUploading || !isFormValid()}
+            className={`bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors ${
+              (isUploading || !isFormValid()) ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Save Resource
+            {isUploading ? 'Saving...' : 'Save Resource'}
           </button>
         </div>
       </form>

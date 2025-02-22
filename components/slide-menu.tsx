@@ -62,7 +62,7 @@ export default function SlideMenu({ isOpen, onClose }: SlideMenuProps) {
           <ul className="space-y-6">
             <li><Link href="/" className="text-xl hover:opacity-80">HOME</Link></li>
             <li>
-              <Link href="/" className="text-xl hover:opacity-80 flex justify-between items-center">
+              <Link href="/what-we-do" className="text-xl hover:opacity-80 flex justify-between items-center">
                 WHAT WE DO</Link></li>
             <li><Link href="/" className="text-xl hover:opacity-80">WHO WE ARE</Link></li>
             <li><Link href="/" className="text-xl hover:opacity-80">STORIES OF IMPACT</Link></li>
