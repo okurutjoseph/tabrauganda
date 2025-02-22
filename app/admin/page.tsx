@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Cookies from 'js-cookie'
+import { useUploadThing } from '@/lib/uploadthing'
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { toast } from 'sonner'
 
 // Sidebar item type
 type SidebarItem = {
@@ -16,6 +20,16 @@ export default function AdminDashboard() {
   const [activePage, setActivePage] = useState('services')
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+
+  // Add UploadThing hooks
+  const { startUpload: startImageUpload } = useUploadThing("imageUploader")
+  const { startUpload: startDocumentUpload } = useUploadThing("documentUploader")
+  
+  // Add Convex mutations
+  const createService = useMutation(api.services.create)
+  const createImpact = useMutation(api.impact.create)
+  const createResource = useMutation(api.resources.create)
+  const createSupport = useMutation(api.support.create)
 
   // Services state
   const [projectName, setProjectName] = useState('')
@@ -60,10 +74,10 @@ export default function AdminDashboard() {
   }, [router])
 
   const sidebarItems: SidebarItem[] = [
-    { name: 'Services', path: '#services' },
-    { name: 'Impact', path: '#impact' },
-    { name: 'Resources', path: '#resources' },
-    { name: 'Support', path: '#support' }
+    { name: 'Services', path: '#' },
+    { name: 'Impact', path: '#' },
+    { name: 'Resources', path: '#' },
+    { name: 'Support', path: '#' }
   ]
 
   const handleLogout = () => {
@@ -128,40 +142,259 @@ export default function AdminDashboard() {
 
   const handleServiceSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement form submission
-    console.log({ projectName, serviceDescription, serviceImage })
+    if (!projectName.trim() || !serviceDescription.trim()) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+    
+    setIsLoading(true)
+
+    try {
+      let imageUrl = undefined
+
+      if (serviceImage) {
+        try {
+          const uploadResult = await startImageUpload([serviceImage])
+          if (uploadResult && uploadResult[0]) {
+            imageUrl = uploadResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error)
+          toast.error('Failed to upload image')
+          setIsLoading(false)
+          return
+        }
+      }
+
+      await createService({
+        projectName: projectName.trim(),
+        description: serviceDescription.trim(),
+        imageUrl,
+      })
+
+      // Show success message and reset form
+      toast.success('Service created successfully!')
+      setProjectName('')
+      setServiceDescription('')
+      setServiceImage(null)
+      setServiceImagePreview('')
+
+      // Wait for 1 second before refreshing
+      setTimeout(() => {
+        router.refresh()
+      }, 1000)
+
+    } catch (error) {
+      console.error('Error creating service:', error)
+      toast.error('Failed to create service. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleImpactSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement form submission
-    console.log({ impactHeading, impactDescription, mediaType, impactImage, videoUrl })
+    if (!impactHeading.trim() || !impactDescription.trim()) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+    if (mediaType === 'video' && !videoUrl.trim()) {
+      toast.error('Please provide a video URL')
+      return
+    }
+    
+    setIsLoading(true)
+
+    try {
+      let mediaUrl = undefined
+
+      if (mediaType === 'image' && impactImage) {
+        try {
+          const uploadResult = await startImageUpload([impactImage])
+          if (uploadResult && uploadResult[0]) {
+            mediaUrl = uploadResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error)
+          toast.error('Failed to upload image')
+          setIsLoading(false)
+          return
+        }
+      } else if (mediaType === 'video') {
+        mediaUrl = videoUrl.trim()
+      }
+
+      await createImpact({
+        heading: impactHeading.trim(),
+        description: impactDescription.trim(),
+        mediaType,
+        mediaUrl,
+      })
+
+      // Show success message and reset form
+      toast.success('Impact story created successfully!')
+      setImpactHeading('')
+      setImpactDescription('')
+      setImpactImage(null)
+      setImpactImagePreview('')
+      setVideoUrl('')
+
+      // Wait for 1 second before refreshing
+      setTimeout(() => {
+        router.refresh()
+      }, 1000)
+
+    } catch (error) {
+      console.error('Error creating impact story:', error)
+      toast.error('Failed to create impact story. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleResourceSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement form submission
-    console.log({
-      resourceName,
-      resourceDescription,
-      resourceType,
-      documentFile,
-      resourceUrl,
-      thumbnailFile
-    })
+    if (!resourceName.trim() || !resourceDescription.trim()) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+    if (resourceType === 'document' && !documentFile) {
+      toast.error('Please upload a document')
+      return
+    }
+    if (resourceType === 'link' && !resourceUrl.trim()) {
+      toast.error('Please provide a resource URL')
+      return
+    }
+    
+    setIsLoading(true)
+
+    try {
+      let thumbnailUrl = undefined
+      let documentUrl = undefined
+      let finalResourceUrl = undefined
+
+      if (thumbnailFile) {
+        try {
+          const thumbnailResult = await startImageUpload([thumbnailFile])
+          if (thumbnailResult && thumbnailResult[0]) {
+            thumbnailUrl = thumbnailResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading thumbnail:', error)
+          toast.error('Failed to upload thumbnail')
+          setIsLoading(false)
+          return
+        }
+      }
+
+      if (resourceType === 'document' && documentFile) {
+        try {
+          const documentResult = await startDocumentUpload([documentFile])
+          if (documentResult && documentResult[0]) {
+            documentUrl = documentResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading document:', error)
+          toast.error('Failed to upload document')
+          setIsLoading(false)
+          return
+        }
+      } else if (resourceType === 'link') {
+        finalResourceUrl = resourceUrl.trim()
+      }
+
+      await createResource({
+        name: resourceName.trim(),
+        description: resourceDescription.trim(),
+        resourceType,
+        resourceUrl: finalResourceUrl,
+        documentUrl,
+        thumbnailUrl,
+      })
+
+      // Show success message and reset form
+      toast.success('Resource created successfully!')
+      setResourceName('')
+      setResourceDescription('')
+      setDocumentFile(null)
+      setResourceUrl('')
+      setThumbnailFile(null)
+      setThumbnailPreview('')
+
+      // Wait for 1 second before refreshing
+      setTimeout(() => {
+        router.refresh()
+      }, 1000)
+
+    } catch (error) {
+      console.error('Error creating resource:', error)
+      toast.error('Failed to create resource. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleSupportSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement form submission
-    console.log({
-      category: supportCategory,
-      name: supportName,
-      age: supportAge,
-      location: supportLocation,
-      story: supportStory,
-      image: supportImage
-    })
+    if (!supportName.trim() || !supportAge || !supportLocation.trim() || !supportStory.trim()) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+    const ageNum = parseInt(supportAge)
+    if (isNaN(ageNum) || ageNum < 0 || ageNum > 150) {
+      toast.error('Please enter a valid age')
+      return
+    }
+    
+    setIsLoading(true)
+
+    try {
+      let imageUrl = undefined
+
+      if (supportImage) {
+        try {
+          const uploadResult = await startImageUpload([supportImage])
+          if (uploadResult && uploadResult[0]) {
+            imageUrl = uploadResult[0].url
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error)
+          toast.error('Failed to upload image')
+          setIsLoading(false)
+          return
+        }
+      }
+
+      await createSupport({
+        category: supportCategory,
+        name: supportName.trim(),
+        age: parseInt(supportAge),
+        location: supportLocation.trim(),
+        story: supportStory.trim(),
+        imageUrl,
+      })
+
+      // Show success message and reset form
+      toast.success('Support case created successfully!')
+      setSupportName('')
+      setSupportAge('')
+      setSupportLocation('')
+      setSupportStory('')
+      setSupportImage(null)
+      setSupportImagePreview('')
+
+      // Wait for 1 second before refreshing
+      setTimeout(() => {
+        router.refresh()
+      }, 1000)
+
+    } catch (error) {
+      console.error('Error creating support case:', error)
+      toast.error('Failed to create support case. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (isLoading) {
