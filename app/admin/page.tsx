@@ -34,7 +34,6 @@ export default function AdminDashboard() {
   // Add Convex mutations
   const createService = useMutation(api.services.create)
   const createImpact = useMutation(api.impact.create)
-  const createResource = useMutation(api.resources.create)
   const createSupport = useMutation(api.support.create)
   const updateService = useMutation(api.services.update)
   const updateSupport = useMutation(api.support.update)
@@ -54,15 +53,6 @@ export default function AdminDashboard() {
   const [impactImagePreview, setImpactImagePreview] = useState<string>('')
   const [videoUrl, setVideoUrl] = useState('')
 
-  // Resources state
-  const [resourceName, setResourceName] = useState('')
-  const [resourceDescription, setResourceDescription] = useState('')
-  const [resourceType, setResourceType] = useState<'document' | 'link'>('document')
-  const [documentFile, setDocumentFile] = useState<File | null>(null)
-  const [resourceUrl, setResourceUrl] = useState('')
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
-  const [thumbnailPreview, setThumbnailPreview] = useState<string>('')
-
   // Support state
   const [supportName, setSupportName] = useState('')
   const [supportAge, setSupportAge] = useState('')
@@ -75,7 +65,6 @@ export default function AdminDashboard() {
   // Add queries for all data
   const services = useQuery(api.services.getAll)
   const impactStories = useQuery(api.impact.getAll)
-  const resources = useQuery(api.resources.getAll)
   const supportCases = useQuery(api.support.getAll)
 
   // Add these states for editing
@@ -108,13 +97,6 @@ export default function AdminDashboard() {
       ]
     },
     { 
-      name: 'Resources',
-      subItems: [
-        { name: 'Add New Resource', action: 'add' },
-        { name: 'Edit Resources', action: 'edit' }
-      ]
-    },
-    { 
       name: 'Support',
       subItems: [
         { name: 'Add New Case', action: 'add' },
@@ -128,15 +110,21 @@ export default function AdminDashboard() {
     router.replace('/admin/login')
   }
 
-  const handleServiceImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleServiceImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setServiceImage(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setServiceImagePreview(reader.result as string)
+      try {
+        setServiceImage(file)
+        // Show preview
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setServiceImagePreview(reader.result as string)
+        }
+        reader.readAsDataURL(file)
+      } catch (error) {
+        console.error('Error handling image:', error)
+        toast.error('Failed to process image')
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -149,25 +137,6 @@ export default function AdminDashboard() {
         setImpactImagePreview(reader.result as string)
       }
       reader.readAsDataURL(file)
-    }
-  }
-
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setThumbnailFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setThumbnailPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setDocumentFile(file)
     }
   }
 
@@ -196,9 +165,12 @@ export default function AdminDashboard() {
 
       if (serviceImage) {
         try {
+          console.log("Starting image upload...")
           const uploadResult = await startImageUpload([serviceImage])
+          console.log("Upload result:", uploadResult)
           if (uploadResult && uploadResult[0]) {
             imageUrl = uploadResult[0].url
+            console.log("Image URL:", imageUrl)
           }
         } catch (error) {
           console.error('Error uploading image:', error)
@@ -208,7 +180,7 @@ export default function AdminDashboard() {
         }
       }
 
-      if (editingId && typeof editingId === 'string') {
+      if (editingId) {
         await updateService({
           id: editingId as Id<"services">,
           projectName: projectName.trim(),
@@ -303,82 +275,6 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error with impact story:', error)
       toast.error(editingId ? 'Failed to update story' : 'Failed to create story')
-      setIsLoading(false)
-    }
-  }
-
-  const handleResourceSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!resourceName.trim() || !resourceDescription.trim()) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-    if (resourceType === 'document' && !documentFile) {
-      toast.error('Please upload a document')
-      return
-    }
-    if (resourceType === 'link' && !resourceUrl.trim()) {
-      toast.error('Please provide a resource URL')
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      let thumbnailUrl = undefined
-      let finalResourceUrl = undefined
-
-      if (thumbnailFile) {
-        try {
-          const thumbnailResult = await startImageUpload([thumbnailFile])
-          if (thumbnailResult && thumbnailResult[0]) {
-            thumbnailUrl = thumbnailResult[0].url
-          }
-        } catch (error) {
-          console.error('Error uploading thumbnail:', error)
-          toast.error('Failed to upload thumbnail')
-          setIsLoading(false)
-          return
-        }
-      }
-
-      if (resourceType === 'document' && documentFile) {
-        try {
-          const documentResult = await startDocumentUpload([documentFile])
-          if (documentResult && documentResult[0]) {
-            finalResourceUrl = documentResult[0].url
-          }
-        } catch (error) {
-          console.error('Error uploading document:', error)
-          toast.error('Failed to upload document')
-          setIsLoading(false)
-          return
-        }
-      } else if (resourceType === 'link') {
-        finalResourceUrl = resourceUrl.trim()
-      }
-
-      await createResource({
-        name: resourceName.trim(),
-        description: resourceDescription.trim(),
-        resourceType,
-        resourceUrl: finalResourceUrl,
-        thumbnailUrl,
-      })
-
-      // Reset form
-      setResourceName('')
-      setResourceDescription('')
-      setDocumentFile(null)
-      setResourceUrl('')
-      setThumbnailFile(null)
-      setThumbnailPreview('')
-
-      toast.success('Resource created successfully!')
-      setIsLoading(false)
-
-    } catch (error) {
-      console.error('Error creating resource:', error)
-      toast.error('Failed to create resource')
       setIsLoading(false)
     }
   }
@@ -829,145 +725,6 @@ export default function AdminDashboard() {
                   className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
                 >
                   Save Impact Story
-                </button>
-              </div>
-            </form>
-          </div>
-        )
-
-      case 'resources-add':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold">Add Resource</h2>
-            <form onSubmit={handleResourceSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Resource Type
-                </label>
-                <div className="flex space-x-4">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      value="document"
-                      checked={resourceType === 'document'}
-                      onChange={(e) => setResourceType(e.target.value as 'document' | 'link')}
-                      className="form-radio h-4 w-4 text-blue-600"
-                    />
-                    <span className="ml-2">Document</span>
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      value="link"
-                      checked={resourceType === 'link'}
-                      onChange={(e) => setResourceType(e.target.value as 'document' | 'link')}
-                      className="form-radio h-4 w-4 text-blue-600"
-                    />
-                    <span className="ml-2">External Link</span>
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Resource Name
-                </label>
-                <input
-                  type="text"
-                  value={resourceName}
-                  onChange={(e) => setResourceName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Thumbnail Image
-                </label>
-                <div className="flex items-center space-x-4">
-                  <div className="relative w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
-                    {thumbnailPreview ? (
-                      <Image
-                        src={thumbnailPreview}
-                        alt="Resource thumbnail"
-                        fill
-                        style={{ objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <span className="text-gray-500 text-sm">No thumbnail</span>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleThumbnailChange}
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-full file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-blue-50 file:text-blue-700
-                      hover:file:bg-blue-100"
-                  />
-                </div>
-              </div>
-
-              {resourceType === 'document' ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload Document
-                  </label>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.ppt,.pptx"
-                    onChange={handleDocumentChange}
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-full file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-blue-50 file:text-blue-700
-                      hover:file:bg-blue-100"
-                    required
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Resource URL
-                  </label>
-                  <input
-                    type="url"
-                    value={resourceUrl}
-                    onChange={(e) => setResourceUrl(e.target.value)}
-                    placeholder="Enter resource URL"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={resourceDescription}
-                  onChange={(e) => setResourceDescription(e.target.value)}
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                  placeholder="Enter resource description..."
-                />
-              </div>
-
-              <div>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-                >
-                  Save Resource
                 </button>
               </div>
             </form>

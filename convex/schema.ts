@@ -19,17 +19,6 @@ export default defineSchema({
     createdAt: v.number(),
   }),
 
-  // Resources table
-  resources: defineTable({
-    name: v.string(),
-    description: v.string(),
-    resourceType: v.string(), // 'document' or 'link'
-    resourceUrl: v.optional(v.string()), // For external links
-    documentUrl: v.optional(v.string()), // For uploaded documents
-    thumbnailUrl: v.optional(v.string()),
-    createdAt: v.number(),
-  }),
-
   // Support table
   support: defineTable({
     category: v.string(), // 'mother' or 'child'

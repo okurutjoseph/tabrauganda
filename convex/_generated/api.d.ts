@@ -14,7 +14,6 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as impact from "../impact.js";
-import type * as resources from "../resources.js";
 import type * as services from "../services.js";
 import type * as support from "../support.js";
 
@@ -28,7 +27,6 @@ import type * as support from "../support.js";
  */
 declare const fullApi: ApiFromModules<{
   impact: typeof impact;
-  resources: typeof resources;
   services: typeof services;
   support: typeof support;
 }>;

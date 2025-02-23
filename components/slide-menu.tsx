@@ -61,10 +61,10 @@ export default function SlideMenu({ isOpen, onClose }: SlideMenuProps) {
         <nav className="pt-20 px-8">
           <ul className="space-y-6">
             <li><Link href="/" className="text-xl hover:opacity-80">HOME</Link></li>
+            <li><Link href="/" className="text-xl hover:opacity-80">WHO WE ARE</Link></li>
             <li>
               <Link href="/what-we-do" className="text-xl hover:opacity-80 flex justify-between items-center">
                 WHAT WE DO</Link></li>
-            <li><Link href="/" className="text-xl hover:opacity-80">WHO WE ARE</Link></li>
             <li><Link href="/stories-of-impact" className="text-xl hover:opacity-80">STORIES OF IMPACT</Link></li>
             <li>
               <Link href="/" className="text-xl hover:opacity-80 flex justify-between items-center">
