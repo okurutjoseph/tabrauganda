@@ -22,4 +22,22 @@ export const getAll = query({
   handler: async (ctx) => {
     return await ctx.db.query("services").collect();
   },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id("services"),
+    projectName: v.string(),
+    description: v.string(),
+    imageUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { id, projectName, description, imageUrl } = args;
+    await ctx.db.patch(id, {
+      projectName,
+      description,
+      imageUrl,
+    });
+    return id;
+  },
 }); 

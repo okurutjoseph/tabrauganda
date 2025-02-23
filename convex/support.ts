@@ -28,4 +28,28 @@ export const getAll = query({
   handler: async (ctx) => {
     return await ctx.db.query("support").collect();
   },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id("support"),
+    category: v.string(),
+    name: v.string(),
+    age: v.number(),
+    location: v.string(),
+    story: v.string(),
+    imageUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { id, category, name, age, location, story, imageUrl } = args;
+    await ctx.db.patch(id, {
+      category,
+      name,
+      age,
+      location,
+      story,
+      imageUrl,
+    });
+    return id;
+  },
 }); 
