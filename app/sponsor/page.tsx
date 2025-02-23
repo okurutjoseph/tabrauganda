@@ -15,10 +15,15 @@ export default function Sponsor() {
     setImageErrors(prev => ({ ...prev, [caseId]: true }))
   }
 
-  // Add console.log to debug categories
-  console.log('All support cases:', supportCases)
-  
-  // Simplified category logic - let's hardcode the categories for now
+  // Add detailed logging
+  if (supportCases) {
+    console.log('Support Cases Data:', {
+      raw: supportCases,
+      categories: supportCases.map(item => item.category),
+      imageUrls: supportCases.map(item => item.imageUrl)
+    })
+  }
+
   const categories = ['Child', 'Mother'] as const
 
   const filteredCases = supportCases?.filter(supportCase => 
@@ -72,7 +77,7 @@ export default function Sponsor() {
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="relative h-64 w-full bg-gray-100">
-                  {supportCase.imageUrl && !imageErrors[supportCase._id.toString()] ? (
+                  {supportCase.imageUrl ? (
                     <Image
                       src={supportCase.imageUrl}
                       alt={supportCase.name}
@@ -101,6 +106,12 @@ export default function Sponsor() {
                       {supportCase.category}
                     </span>
                   </div>
+                </div>
+                {/* Add debug info */}
+                <div className="p-2 bg-gray-100 text-xs">
+                  <code>ID: {supportCase._id.toString()}</code>
+                  <br />
+                  <code>Category: {supportCase.category}</code>
                 </div>
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">

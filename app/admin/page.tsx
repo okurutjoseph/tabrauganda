@@ -150,6 +150,7 @@ export default function AdminDashboard() {
     }
 
     try {
+      setIsLoading(true) // Show loading state immediately
       let imageUrl = undefined
 
       if (serviceImage) {
@@ -161,6 +162,7 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading image:', error)
           toast.error('Failed to upload image')
+          setIsLoading(false) // Reset loading state on error
           return
         }
       }
@@ -171,24 +173,19 @@ export default function AdminDashboard() {
         imageUrl,
       })
 
-      // Show success message first
-      toast.success('Service created successfully!')
-
       // Reset form
       setProjectName('')
       setServiceDescription('')
       setServiceImage(null)
       setServiceImagePreview('')
 
-      // Show loading state and refresh after notification
-      setTimeout(() => {
-        setIsLoading(true)
-        router.refresh()
-      }, 1000)
+      toast.success('Service created successfully!')
+      setIsLoading(false) // Reset loading state after success
 
     } catch (error) {
       console.error('Error creating service:', error)
       toast.error('Failed to create service. Please try again.')
+      setIsLoading(false) // Reset loading state on error
     }
   }
 
@@ -204,6 +201,7 @@ export default function AdminDashboard() {
     }
 
     try {
+      setIsLoading(true) // Show loading state immediately
       let mediaUrl = undefined
 
       if (mediaType === 'image' && impactImage) {
@@ -215,6 +213,7 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading image:', error)
           toast.error('Failed to upload image')
+          setIsLoading(false) // Reset loading state on error
           return
         }
       } else if (mediaType === 'video') {
@@ -228,9 +227,6 @@ export default function AdminDashboard() {
         mediaUrl,
       })
 
-      // Show success message first
-      toast.success('Impact story created successfully!')
-
       // Reset form
       setImpactHeading('')
       setImpactDescription('')
@@ -238,15 +234,13 @@ export default function AdminDashboard() {
       setImpactImagePreview('')
       setVideoUrl('')
 
-      // Show loading state and refresh after notification
-      setTimeout(() => {
-        setIsLoading(true)
-        router.refresh()
-      }, 1000)
+      toast.success('Impact story created successfully!')
+      setIsLoading(false) // Reset loading state after success
 
     } catch (error) {
       console.error('Error creating impact story:', error)
       toast.error('Failed to create impact story. Please try again.')
+      setIsLoading(false) // Reset loading state on error
     }
   }
 
@@ -266,6 +260,7 @@ export default function AdminDashboard() {
     }
 
     try {
+      setIsLoading(true) // Show loading state immediately
       let thumbnailUrl = undefined
       let documentUrl = undefined
       let finalResourceUrl = undefined
@@ -279,6 +274,7 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading thumbnail:', error)
           toast.error('Failed to upload thumbnail')
+          setIsLoading(false) // Reset loading state on error
           return
         }
       }
@@ -292,6 +288,7 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading document:', error)
           toast.error('Failed to upload document')
+          setIsLoading(false) // Reset loading state on error
           return
         }
       } else if (resourceType === 'link') {
@@ -307,9 +304,6 @@ export default function AdminDashboard() {
         thumbnailUrl,
       })
 
-      // Show success message first
-      toast.success('Resource created successfully!')
-
       // Reset form
       setResourceName('')
       setResourceDescription('')
@@ -318,15 +312,13 @@ export default function AdminDashboard() {
       setThumbnailFile(null)
       setThumbnailPreview('')
 
-      // Show loading state and refresh after notification
-      setTimeout(() => {
-        setIsLoading(true)
-        router.refresh()
-      }, 1000)
+      toast.success('Resource created successfully!')
+      setIsLoading(false) // Reset loading state after success
 
     } catch (error) {
       console.error('Error creating resource:', error)
       toast.error('Failed to create resource. Please try again.')
+      setIsLoading(false) // Reset loading state on error
     }
   }
 
@@ -343,6 +335,7 @@ export default function AdminDashboard() {
     }
 
     try {
+      setIsLoading(true) // Show loading state immediately
       let imageUrl = undefined
 
       if (supportImage) {
@@ -354,6 +347,7 @@ export default function AdminDashboard() {
         } catch (error) {
           console.error('Error uploading image:', error)
           toast.error('Failed to upload image')
+          setIsLoading(false) // Reset loading state on error
           return
         }
       }
@@ -367,9 +361,6 @@ export default function AdminDashboard() {
         imageUrl,
       })
 
-      // Show success message first
-      toast.success('Support case created successfully!')
-
       // Reset form
       setSupportName('')
       setSupportAge('')
@@ -378,15 +369,13 @@ export default function AdminDashboard() {
       setSupportImage(null)
       setSupportImagePreview('')
 
-      // Show loading state and refresh after notification
-      setTimeout(() => {
-        setIsLoading(true)
-        router.refresh()
-      }, 1000)
+      toast.success('Support case created successfully!')
+      setIsLoading(false) // Reset loading state after success
 
     } catch (error) {
       console.error('Error creating support case:', error)
       toast.error('Failed to create support case. Please try again.')
+      setIsLoading(false) // Reset loading state on error
     }
   }
 
@@ -395,7 +384,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          <div className="text-xl text-gray-600">Initializing dashboard...</div>
+          <div className="text-xl text-gray-600">Processing...</div>
         </div>
       </div>
     )
