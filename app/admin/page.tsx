@@ -5,19 +5,24 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Cookies from 'js-cookie'
 import { useUploadThing } from '@/lib/uploadthing'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { toast } from 'sonner'
 
 // Sidebar item type
 type SidebarItem = {
   name: string
-  path: string
-  icon?: React.ReactNode
+  subItems: Array<{
+    name: string
+    action: string
+  }>
 }
 
 export default function AdminDashboard() {
-  const [activePage, setActivePage] = useState('services')
+  const [activePage, setActivePage] = useState<{main: string, sub: string}>({
+    main: 'services',
+    sub: 'add'
+  })
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
@@ -63,6 +68,12 @@ export default function AdminDashboard() {
   const [supportImagePreview, setSupportImagePreview] = useState<string>('')
   const [supportCategory, setSupportCategory] = useState<'mother' | 'child'>('mother')
 
+  // Add queries for all data
+  const services = useQuery(api.services.getAll)
+  const impactStories = useQuery(api.impact.getAll)
+  const resources = useQuery(api.resources.getAll)
+  const supportCases = useQuery(api.support.getAll)
+
   useEffect(() => {
     // Check if user is authenticated
     const isAuthenticated = Cookies.get('adminAuthenticated')
@@ -76,10 +87,34 @@ export default function AdminDashboard() {
   }, [router])
 
   const sidebarItems: SidebarItem[] = [
-    { name: 'Services', path: '#' },
-    { name: 'Impact', path: '#' },
-    { name: 'Resources', path: '#' },
-    { name: 'Support', path: '#' }
+    { 
+      name: 'Services',
+      subItems: [
+        { name: 'Add New Service', action: 'add' },
+        { name: 'Edit Services', action: 'edit' }
+      ]
+    },
+    { 
+      name: 'Impact',
+      subItems: [
+        { name: 'Add New Story', action: 'add' },
+        { name: 'Edit Stories', action: 'edit' }
+      ]
+    },
+    { 
+      name: 'Resources',
+      subItems: [
+        { name: 'Add New Resource', action: 'add' },
+        { name: 'Edit Resources', action: 'edit' }
+      ]
+    },
+    { 
+      name: 'Support',
+      subItems: [
+        { name: 'Add New Case', action: 'add' },
+        { name: 'Edit Cases', action: 'edit' }
+      ]
+    }
   ]
 
   const handleLogout = () => {
@@ -391,10 +426,10 @@ export default function AdminDashboard() {
   }
 
   const renderContent = () => {
-    switch (activePage) {
-      case 'services':
+    switch (`${activePage.main}-${activePage.sub}`) {
+      case 'services-add':
         return (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <h2 className="text-2xl font-semibold">Add New Service</h2>
             <form onSubmit={handleServiceSubmit} className="space-y-6">
               <div>
@@ -469,7 +504,43 @@ export default function AdminDashboard() {
           </div>
         )
 
-      case 'impact':
+      case 'services-edit':
+        return (
+          <div className="space-y-8">
+            <h2 className="text-2xl font-semibold">Edit Services</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {services?.map((service) => (
+                <div key={service._id} className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-medium">{service.projectName}</h3>
+                    <button
+                      onClick={() => setActivePage({
+                        main: 'services',
+                        sub: 'edit'
+                      })}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  {service.imageUrl && (
+                    <div className="relative h-40 mb-4">
+                      <Image
+                        src={service.imageUrl}
+                        alt={service.projectName}
+                        fill
+                        className="object-cover rounded"
+                      />
+                    </div>
+                  )}
+                  <p className="text-gray-600">{service.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+
+      case 'impact-add':
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold">Add Impact Story</h2>
@@ -589,7 +660,7 @@ export default function AdminDashboard() {
           </div>
         )
 
-      case 'resources':
+      case 'resources-add':
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold">Add Resource</h2>
@@ -728,10 +799,10 @@ export default function AdminDashboard() {
           </div>
         )
 
-      case 'support':
+      case 'support-add':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold">Add Support Case</h2>
+          <div className="space-y-8">
+            <h2 className="text-2xl font-semibold">Add New Support Case</h2>
             <form onSubmit={handleSupportSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -864,6 +935,48 @@ export default function AdminDashboard() {
           </div>
         )
 
+      case 'support-edit':
+        return (
+          <div className="space-y-8">
+            <h2 className="text-2xl font-semibold">Edit Support Cases</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {supportCases?.map((supportCase) => (
+                <div key={supportCase._id} className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-medium">{supportCase.name}</h3>
+                      <span className="text-sm text-gray-500">
+                        {supportCase.category} • Age: {supportCase.age}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setActivePage({
+                        main: 'support',
+                        sub: 'edit'
+                      })}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  {supportCase.imageUrl && (
+                    <div className="relative h-40 mb-4">
+                      <Image
+                        src={supportCase.imageUrl}
+                        alt={supportCase.name}
+                        fill
+                        className="object-cover rounded"
+                      />
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-600 mb-2">Location: {supportCase.location}</p>
+                  <p className="text-gray-600">{supportCase.story}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+
       default:
         return null
     }
@@ -880,15 +993,26 @@ export default function AdminDashboard() {
         </div>
         <nav className="mt-4">
           {sidebarItems.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => setActivePage(item.name.toLowerCase())}
-              className={`w-full flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 transition-colors
-                ${activePage === item.name.toLowerCase() ? 'bg-gray-100 border-l-4 border-blue-500' : ''}`}
-            >
-              {item.icon}
-              <span>{item.name}</span>
-            </button>
+            <div key={item.name} className="mb-2">
+              <div className="px-6 py-2 text-sm font-medium text-gray-600">
+                {item.name}
+              </div>
+              {item.subItems.map((subItem) => (
+                <button
+                  key={subItem.name}
+                  onClick={() => setActivePage({
+                    main: item.name.toLowerCase(),
+                    sub: subItem.action
+                  })}
+                  className={`w-full flex items-center px-8 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors
+                    ${activePage.main === item.name.toLowerCase() && activePage.sub === subItem.action
+                      ? 'bg-gray-100 border-l-4 border-blue-500'
+                      : ''}`}
+                >
+                  <span>{subItem.name}</span>
+                </button>
+              ))}
+            </div>
           ))}
           <button
             onClick={handleLogout}
