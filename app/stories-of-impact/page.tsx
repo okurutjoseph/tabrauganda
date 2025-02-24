@@ -33,7 +33,7 @@ export default function StoriesOfImpact() {
         {/* Impact Stories Grid */}
         <div className="container mx-auto px-4 py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {impactStories?.map((story) => (
+            {impactStories?.map((story) => story && (
               <div
                 key={story._id}
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
