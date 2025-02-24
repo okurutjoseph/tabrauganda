@@ -14,9 +14,13 @@ export default defineSchema({
   impact: defineTable({
     heading: v.string(),
     description: v.string(),
-    mediaType: v.string(), // 'image' or 'video'
-    mediaUrl: v.optional(v.string()), // Image URL or video URL
+    // Allow both old and new fields temporarily
+    mediaType: v.optional(v.string()),
+    mediaUrl: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
     createdAt: v.number(),
+  }).searchIndex("by_heading", {
+    searchField: "heading",
   }),
 
   // Support table

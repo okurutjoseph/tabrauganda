@@ -11,11 +11,24 @@ export const ourFileRouter = {
     }
   })
     .middleware(() => {
-      return { timestamp: Date.now() };
+      // This code runs on your server before upload
+      return { 
+        timestamp: Date.now(),
+        userId: 'admin' // Add a userId for tracking
+      };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete:", file.url);
-      return { url: file.url };
+      // This code RUNS ON YOUR SERVER after upload
+      console.log("Upload complete for file:", file.name);
+      console.log("File URL:", file.url);
+      console.log("File key:", file.key);
+      console.log("Metadata:", metadata);
+      
+      // Return file details to the client
+      return { 
+        url: file.url,
+        key: file.key 
+      };
     }),
 } satisfies FileRouter;
 
